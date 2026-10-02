@@ -32,9 +32,10 @@ import isaaclab_tasks.manager_based.manipulation.reach.mdp as mdp
 ##
 
 """
-これが大元だと思っていい。ここではシーンを定義している。
+このファイルが大元と思っていい
 """
 
+# シーンの定義。Sim上にあるオブジェクトの配置やアセットを指定するクラス
 @configclass
 class ReachSceneCfg(InteractiveSceneCfg):
     """Configuration for the scene with a robotic arm."""
@@ -73,7 +74,7 @@ class ReachSceneCfg(InteractiveSceneCfg):
 # MDP settings
 ##
 # Markov Decision Mrocess（マルコフ決定過程）
-
+# エージェントが達成すべき目標値を設定するクラス
 @configclass
 class CommandsCfg:
     """Command terms for the MDP."""
@@ -95,6 +96,7 @@ class CommandsCfg:
     )
 
 
+# 行動を定義するクラス。MDP（マルコフ決定過程）の問題を解くため、エージェントができる行動の種類を定義するクラス
 @configclass
 class ActionsCfg:
     """Action specifications for the MDP."""
@@ -103,10 +105,12 @@ class ActionsCfg:
     gripper_action: ActionTerm | None = None
 
 
+# 方針を設定するクラス。エージェントが環境から受け取る情報の種類や、ノイズの不要方法を定義するクラス
 @configclass
 class ObservationsCfg:
     """Observation specifications for the MDP."""
 
+    # 方針（Policy）に入力される情報
     @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
@@ -125,10 +129,12 @@ class ObservationsCfg:
     policy: PolicyCfg = PolicyCfg()
 
 
+# エピソードの開始時やリセット時に発生する、環境のランダム化や初期化イベントを定義するクラス
 @configclass
 class EventCfg:
     """Configuration for events."""
 
+    # エピソードリセット時に、ロボットの関節角度を一定の範囲でランダムに初期化する
     reset_robot_joints = EventTerm(
         func=mdp.reset_joints_by_scale,
         mode="reset",
@@ -139,21 +145,25 @@ class EventCfg:
     )
 
 
+# 報酬設定を定義するクラス
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
 
     # task terms
+    # 目標位置との誤差に応じたペナルティ
     end_effector_position_tracking = RewTerm(
         func=mdp.position_command_error,
         weight=-0.2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
+    # tanhを用いた位置追従報酬
     end_effector_position_tracking_fine_grained = RewTerm(
         func=mdp.position_command_error_tanh,
         weight=0.1,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose"},
     )
+    # 目標姿勢との誤差に応じたペナルティ
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
         weight=-0.1,
@@ -161,6 +171,7 @@ class RewardsCfg:
     )
 
     # action penalty
+    # 急激な動作や過度な関節速度を抑えるためのペナルティ
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.0001)
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2,
@@ -169,6 +180,7 @@ class RewardsCfg:
     )
 
 
+# 終了条件の定義
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
@@ -176,6 +188,7 @@ class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
 
+# 学習率の定義
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
@@ -194,6 +207,7 @@ class CurriculumCfg:
 ##
 
 
+# 環境全体の定義。全体の統括するクラス
 @configclass
 class ReachEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the reach end-effector pose tracking environment."""
@@ -213,13 +227,14 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2
-        self.sim.render_interval = self.decimation
-        self.episode_length_s = 12.0
-        self.viewer.eye = (3.5, 3.5, 3.5)
+        self.decimation = 2  # シミュレーション内で2ステップごとに、新しいアクションを決定するようにしている
+        self.sim.render_interval = self.decimation  # 画面の作画を行う間隔を、decimationと同期させている
+        self.episode_length_s = 12.0  # 1エピソードの長さを最大12秒に設定している
+        self.viewer.eye = (3.5, 3.5, 3.5)  # カメラの初期座標を設定している
         # simulation settings
-        self.sim.dt = 1.0 / 60.0
+        self.sim.dt = 1.0 / 60.0  # シミュレーション内の時間の刻み方を設定（60Hz）
 
+        # テレオペレーションの設定。今回は使用しないため、すべてFalse
         self.teleop_devices = DevicesCfg(
             devices={
                 "keyboard": Se3KeyboardCfg(
