@@ -31,18 +31,23 @@ import isaaclab_tasks.manager_based.manipulation.reach.mdp as mdp
 # Scene definition
 ##
 
+"""
+これが大元だと思っていい。ここではシーンを定義している。
+"""
 
 @configclass
 class ReachSceneCfg(InteractiveSceneCfg):
     """Configuration for the scene with a robotic arm."""
 
     # world
+    # 床面の定義
     ground = AssetBaseCfg(
         prim_path="/World/ground",
         spawn=sim_utils.GroundPlaneCfg(),
         init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, -1.05)),
     )
 
+    # テーブル（ロボットが作業する机）の定義
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         spawn=sim_utils.UsdFileCfg(
@@ -52,9 +57,12 @@ class ReachSceneCfg(InteractiveSceneCfg):
     )
 
     # robots
+    # ロボットの定義
+    # ここでは、MISSINGとなり定義されていない。このClassの継承先で、いろんなロボットが定義される。
     robot: ArticulationCfg = MISSING
 
     # lights
+    # 光の定義
     light = AssetBaseCfg(
         prim_path="/World/light",
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
@@ -64,12 +72,13 @@ class ReachSceneCfg(InteractiveSceneCfg):
 ##
 # MDP settings
 ##
-
+# Markov Decision Mrocess（マルコフ決定過程）
 
 @configclass
 class CommandsCfg:
     """Command terms for the MDP."""
 
+    # UniformPoseCommandCfg: ロボットのエンドエフェクターの目標値を決定している（位置・姿勢）
     ee_pose = mdp.UniformPoseCommandCfg(
         asset_name="robot",
         body_name=MISSING,

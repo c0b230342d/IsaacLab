@@ -15,6 +15,10 @@ with `Isaac` in their name.
 
 """Launch Isaac Sim Simulator first."""
 
+"""
+作成している環境の名前、および設定ファイルを表示するスクリプト
+"""
+
 import argparse
 
 from isaaclab.app import AppLauncher

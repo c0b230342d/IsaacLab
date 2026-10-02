@@ -10,10 +10,10 @@ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, R
 
 @configclass
 class FrankaReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
-    num_steps_per_env = 24
-    max_iterations = 1000
-    save_interval = 50
-    experiment_name = "franka_reach"
+    num_steps_per_env = 24 # 学習の更新を行うまでに、何ステップ分のデータを蓄積するか
+    max_iterations = 1000 # 学習を繰り返す総ステップ数
+    save_interval = 50 # 50インテレーション（ステップ）ごとにモデルのチェックポイントを保存する
+    experiment_name = "franka_reach" # ログや保存ファイルのメインフォルダ名
     run_name = ""
     policy = RslRlPpoActorCriticCfg(
         init_noise_std=1.0,
